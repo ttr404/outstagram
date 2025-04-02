@@ -8,6 +8,7 @@ import Head from 'next/head'
 import { useRouter } from 'next/router'
 import * as React from 'react'
 import Link from 'next/link'
+import PostModal from '@/components/postModal'
 
 const POSTS_PER_PAGE = 20
 
@@ -23,6 +24,8 @@ const Home: NextPageWithAuthAndLayout = () => {
   const currentPageNumber = router.query.page ? Number(router.query.page) : 1
   const utils = trpc.useContext()
 
+  const [selectedPost, setSelectedPost] = React.useState<any | null>(null)
+
   const feedQueryPathAndInput: InferQueryPathAndInput<'post.feed'> = [
     'post.feed',
     getQueryPaginationInput(POSTS_PER_PAGE, currentPageNumber),
@@ -30,6 +33,14 @@ const Home: NextPageWithAuthAndLayout = () => {
 
   const feedQuery = trpc.useQuery(feedQueryPathAndInput, {
     enabled: status === 'authenticated',
+  })
+
+  const likeMutation = trpc.useMutation(['post.like'], {
+    onSuccess: () => utils.invalidateQueries(['post.feed']),
+  })
+
+  const unlikeMutation = trpc.useMutation(['post.unlike'], {
+    onSuccess: () => utils.invalidateQueries(['post.feed']),
   })
 
   if (status === 'loading') {
@@ -73,8 +84,11 @@ const Home: NextPageWithAuthAndLayout = () => {
                 if (!imageUrl) return null
 
                 return (
-                  <Link key={post.id} href={`/post/${post.id}`}>
-                    <a className="group block overflow-hidden rounded-md shadow-md aspect-square">
+                  <li key={post.id}>
+                    <button
+                      onClick={() => setSelectedPost(post)}
+                      className="group block overflow-hidden rounded-md shadow-md aspect-square w-full h-full"
+                    >
                       <div
                         className="w-full h-full transition-transform duration-300 group-hover:scale-105"
                         style={{
@@ -85,8 +99,8 @@ const Home: NextPageWithAuthAndLayout = () => {
                           height: '100%',
                         }}
                       />
-                    </a>
-                  </Link>
+                    </button>
+                  </li>
                 )
               })}
             </ul>
@@ -98,6 +112,15 @@ const Home: NextPageWithAuthAndLayout = () => {
           itemsPerPage={POSTS_PER_PAGE}
           currentPageNumber={currentPageNumber}
         />
+
+        {selectedPost && (
+          <PostModal
+            post={selectedPost}
+            onClose={() => setSelectedPost(null)}
+            onLike={() => likeMutation.mutate(selectedPost.id)}
+            onUnlike={() => unlikeMutation.mutate(selectedPost.id)}
+          />
+        )}
       </>
     )
   }
