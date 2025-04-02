@@ -1,22 +1,21 @@
 import { Layout } from '@/components/layout'
 import { getQueryPaginationInput, Pagination } from '@/components/pagination'
-import type { PostSummaryProps } from '@/components/post-summary'
 import { PostSummarySkeleton } from '@/components/post-summary-skeleton'
 import { InferQueryPathAndInput, trpc } from '@/lib/trpc'
 import type { NextPageWithAuthAndLayout } from '@/lib/types'
 import { useSession } from 'next-auth/react'
-import dynamic from 'next/dynamic'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
 import * as React from 'react'
 import Link from 'next/link'
 
-const PostSummary = dynamic<PostSummaryProps>(
-  () => import('@/components/post-summary').then((mod) => mod.PostSummary),
-  { ssr: false }
-)
-
 const POSTS_PER_PAGE = 20
+
+function extractFirstImageUrl(contentHtml: string | null | undefined): string | null {
+  if (!contentHtml) return null
+  const match = contentHtml.match(/<img[^>]+src="([^">]+)"/)
+  return match?.[1] || null
+}
 
 const Home: NextPageWithAuthAndLayout = () => {
   const { data: session, status } = useSession()
@@ -31,65 +30,6 @@ const Home: NextPageWithAuthAndLayout = () => {
 
   const feedQuery = trpc.useQuery(feedQueryPathAndInput, {
     enabled: status === 'authenticated',
-  })
-
-  const likeMutation = trpc.useMutation(['post.like'], {
-    onMutate: async (likedPostId) => {
-      await utils.cancelQuery(feedQueryPathAndInput)
-      const previousQuery = utils.getQueryData(feedQueryPathAndInput)
-      if (previousQuery) {
-        utils.setQueryData(feedQueryPathAndInput, {
-          ...previousQuery,
-          posts: previousQuery.posts.map((post) =>
-            post.id === likedPostId
-              ? {
-                  ...post,
-                  likedBy: [
-                    ...post.likedBy,
-                    {
-                      user: { id: session!.user.id, name: session!.user.name },
-                    },
-                  ],
-                }
-              : post
-          ),
-        })
-      }
-      return { previousQuery }
-    },
-    onError: (err, id, context: any) => {
-      if (context?.previousQuery) {
-        utils.setQueryData(feedQueryPathAndInput, context.previousQuery)
-      }
-    },
-  })
-
-  const unlikeMutation = trpc.useMutation(['post.unlike'], {
-    onMutate: async (unlikedPostId) => {
-      await utils.cancelQuery(feedQueryPathAndInput)
-      const previousQuery = utils.getQueryData(feedQueryPathAndInput)
-      if (previousQuery) {
-        utils.setQueryData(feedQueryPathAndInput, {
-          ...previousQuery,
-          posts: previousQuery.posts.map((post) =>
-            post.id === unlikedPostId
-              ? {
-                  ...post,
-                  likedBy: post.likedBy.filter(
-                    (item) => item.user.id !== session!.user.id
-                  ),
-                }
-              : post
-          ),
-        })
-      }
-      return { previousQuery }
-    },
-    onError: (err, id, context: any) => {
-      if (context?.previousQuery) {
-        utils.setQueryData(feedQueryPathAndInput, context.previousQuery)
-      }
-    },
   })
 
   if (status === 'loading') {
@@ -120,20 +60,33 @@ const Home: NextPageWithAuthAndLayout = () => {
           </div>
         ) : (
           <div className="flow-root">
-            <ul className="-my-12 divide-y divide-primary">
-              {feedQuery.data.posts.map((post) => (
-                <li key={post.id} className="py-10">
-                  <PostSummary
-                    post={post}
-                    onLike={() => {
-                      likeMutation.mutate(post.id)
-                    }}
-                    onUnlike={() => {
-                      unlikeMutation.mutate(post.id)
-                    }}
-                  />
-                </li>
-              ))}
+            <ul
+              className="-my-12 divide-y divide-primary"
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                gap: '1rem',
+              }}
+            >
+              {feedQuery.data.posts.map((post) => {
+                const imageUrl = extractFirstImageUrl(post.contentHtml)
+                if (!imageUrl) return null
+
+                return (
+                  <Link key={post.id} href={`/post/${post.id}`}>
+                    <a
+                      className="rounded-md shadow-sm"
+                      style={{
+                        background: `url(${imageUrl})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                        aspectRatio: '1 / 1',
+                        display: 'block',
+                      }}
+                    />
+                  </Link>
+                )
+              })}
             </ul>
           </div>
         )}

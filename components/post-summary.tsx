@@ -24,6 +24,13 @@ export type PostSummaryProps = {
   onUnlike: () => void
 }
 
+// Helper to extract the first image URL from HTML content
+function extractFirstImageUrl(contentHtml: string | null | undefined): string | null {
+  if (!contentHtml) return null
+  const match = contentHtml.match(/<img[^>]+src="([^">]+)"/)
+  return match?.[1] || null
+}
+
 export function PostSummary({
   post,
   hideAuthor = false,
@@ -36,11 +43,12 @@ export function PostSummary({
   )
 
   const { data: session } = useSession()
-
   const isLikedByCurrentUser = Boolean(
     post.likedBy.find((item) => item.user.id === session!.user.id)
   )
   const likeCount = post.likedBy.length
+
+  const imageUrl = extractFirstImageUrl(post.contentHtml)
 
   return (
     <div>
@@ -50,13 +58,22 @@ export function PostSummary({
         </Banner>
       )}
       <div className={classNames(post.hidden ? 'opacity-50' : '')}>
-        <Link href={`/post/${post.id}`}>
-          <a>
-            <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">
-              {post.title}
-            </h2>
-          </a>
-        </Link>
+        {imageUrl && (
+          <Link href={`/post/${post.id}`}>
+            <a>
+              <img
+                src={imageUrl}
+                alt="Post image"
+                className="rounded shadow-md max-h-96 object-cover w-full"
+              />
+            </a>
+          </Link>
+        )}
+
+        {/* Title is intentionally hidden */}
+        {/* <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">
+          {post.title}
+        </h2> */}
 
         <div className={classNames(hideAuthor ? 'mt-2' : 'mt-6')}>
           {hideAuthor ? (
@@ -71,7 +88,8 @@ export function PostSummary({
           )}
         </div>
 
-        <HtmlView html={summary} className={hideAuthor ? 'mt-4' : 'mt-6'} />
+        {/* If you want to hide all text, remove HtmlView and Continue Reading too */}
+        {/* <HtmlView html={summary} className={hideAuthor ? 'mt-4' : 'mt-6'} /> */}
 
         <div className="flex items-center gap-4 mt-4 clear-both">
           {hasMore && (
@@ -92,7 +110,7 @@ export function PostSummary({
                   event.preventDefault()
                 }}
               >
-                <div className="inline-flex items-center gap-1.5">
+                <div className="inline-flex items-center gap-1.5 cursor-pointer">
                   {isLikedByCurrentUser ? (
                     <HeartFilledIcon className="w-4 h-4 text-red" />
                   ) : (
