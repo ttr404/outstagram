@@ -5,7 +5,7 @@ import type { NextPageWithAuthAndLayout } from '@/lib/types'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
 import toast from 'react-hot-toast'
-import UploadButton from '@/components/UploadButton'
+import UploadButton from '@/components/uploadButton'
 import { useState } from 'react'
 
 const NewPostPage: NextPageWithAuthAndLayout = () => {

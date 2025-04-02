@@ -75,6 +75,7 @@ export const authOptions: NextAuthOptions = {
                 name: profile.name,
                 email: profile.email,
                 image: profile.picture,
+                role: 'USER',
               }
             },
           }),
@@ -99,6 +100,7 @@ export const authOptions: NextAuthOptions = {
                 name: fbProfile.name,
                 email: fbProfile.email,
                 image: fbProfile.picture?.data?.url,
+                role: 'USER',
               }
             },
           }),

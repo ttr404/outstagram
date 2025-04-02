@@ -9,6 +9,7 @@ import dynamic from 'next/dynamic'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
 import * as React from 'react'
+import Link from 'next/link'
 
 const PostSummary = dynamic<PostSummaryProps>(
   () => import('@/components/post-summary').then((mod) => mod.PostSummary),
@@ -99,9 +100,9 @@ const Home: NextPageWithAuthAndLayout = () => {
     return (
       <div className="text-center mt-10 text-red-500">
         You are not logged in.{' '}
-        <a href="/sign-in" className="underline">
-          Sign in
-        </a>
+        <Link href="/sign-in" legacyBehavior>
+          <a className="underline">Sign in</a>
+        </Link>
       </div>
     )
   }

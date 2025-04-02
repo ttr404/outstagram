@@ -24,11 +24,6 @@ class MyDocument extends Document {
           <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
           <link rel="manifest" href="/manifest.webmanifest" />
           <meta name="theme-color" content="#ff455d" />
-
-          <script
-            src="https://upload-widget.cloudinary.com/global/all.js"
-            type="text/javascript"
-          ></script>
         </Head>
         <body>
           <Main />

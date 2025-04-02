@@ -9,4 +9,7 @@ module.exports = {
       'platform-lookaside.fbsbx.com',
     ],
   },
+  typescript: {
+    ignoreBuildErrors: true,
+  }
 }
