@@ -13,7 +13,7 @@ const POSTS_PER_PAGE = 20
 
 function extractFirstImageUrl(contentHtml: string | null | undefined): string | null {
   if (!contentHtml) return null
-  const match = contentHtml.match(/<img[^>]+src="([^">]+)"/)
+  const match = contentHtml.match(/<img[^>]+src="([^">]+)"/i)
   return match?.[1] || null
 }
 
@@ -61,7 +61,7 @@ const Home: NextPageWithAuthAndLayout = () => {
         ) : (
           <div className="flow-root">
             <ul
-              className="-my-12 divide-y divide-primary"
+              className="-my-12"
               style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
@@ -74,16 +74,18 @@ const Home: NextPageWithAuthAndLayout = () => {
 
                 return (
                   <Link key={post.id} href={`/post/${post.id}`}>
-                    <a
-                      className="rounded-md shadow-sm"
-                      style={{
-                        background: `url(${imageUrl})`,
-                        backgroundSize: 'cover',
-                        backgroundPosition: 'center',
-                        aspectRatio: '1 / 1',
-                        display: 'block',
-                      }}
-                    />
+                    <a className="group block overflow-hidden rounded-md shadow-md aspect-square">
+                      <div
+                        className="w-full h-full transition-transform duration-300 group-hover:scale-105"
+                        style={{
+                          backgroundImage: `url(${imageUrl})`,
+                          backgroundSize: 'cover',
+                          backgroundPosition: 'center',
+                          width: '100%',
+                          height: '100%',
+                        }}
+                      />
+                    </a>
                   </Link>
                 )
               })}
