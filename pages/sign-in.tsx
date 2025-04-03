@@ -36,7 +36,7 @@ const SignIn = ({
                 </div>
               ))}
             </div>
-            <div className="-mt-4 md:mt-0 w-screen left-1/2 transform -translate-x-1/2 absolute sm:w-[434px] lg:w-[646px] xl:w-[862px] auth-footer">
+            <div className="w-screen left-1/2 transform -translate-x-1/2 absolute top-[calc(100%+16px)] sm:w-[434px] lg:w-[646px] xl:w-[862px] auth-footer">
               <Footer />
             </div>
           </div>
