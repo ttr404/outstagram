@@ -64,3 +64,9 @@ npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+
+## 🙏 Acknowledgements
+
+This project is built upon the amazing work done in [Beam](https://github.com/planetscale/beam) by [PlanetScale](https://planetscale.com/). Huge thanks to the team for open-sourcing such a well-crafted and inspiring codebase. I’ve used it as a foundation and made custom modifications to suit my own use case.
+
