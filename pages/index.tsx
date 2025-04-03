@@ -12,7 +12,9 @@ import PostModal from '@/components/postModal'
 
 const POSTS_PER_PAGE = 20
 
-function extractFirstImageUrl(contentHtml: string | null | undefined): string | null {
+function extractFirstImageUrl(
+  contentHtml: string | null | undefined
+): string | null {
   if (!contentHtml) return null
   const match = contentHtml.match(/<img[^>]+src="([^">]+)"/i)
   return match?.[1] || null
@@ -62,7 +64,7 @@ const Home: NextPageWithAuthAndLayout = () => {
     return (
       <>
         <Head>
-          <title>Beam</title>
+          <title>Outstagram</title>
         </Head>
 
         {feedQuery.data.postCount === 0 ? (
