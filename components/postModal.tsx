@@ -3,11 +3,12 @@ import * as React from 'react'
 import { HtmlView } from '@/components/html-view'
 import { AuthorWithDate } from '@/components/author-with-date'
 import { LikeButton } from '@/components/like-button'
-import { MessageIcon } from '@/components/icons'
+import { MessageIcon, EditIcon } from '@/components/icons'
 import { ButtonLink } from '@/components/button-link'
 import { InferQueryOutput, trpc } from '@/lib/trpc'
 import { AddCommentForm } from '@/components/add-comment-form'
 import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/router'
 
 type Post = InferQueryOutput<'post.feed'>['posts'][number]
 
@@ -25,6 +26,7 @@ export default function PostModal({
   const [showComments, setShowComments] = React.useState(false)
   const utils = trpc.useContext()
   const { data: session } = useSession()
+  const router = useRouter()
 
   const postDetailQuery = trpc.useQuery(['post.detail', { id: post.id }], {
     enabled: showComments,
@@ -75,13 +77,14 @@ export default function PostModal({
                 {/* Post content */}
                 <HtmlView html={post.contentHtml} className="mt-6" />
 
-                {/* Likes + comment toggle */}
-                <div className="flex gap-4 mt-6 clear-both">
+                {/* Likes + comment + edit buttons */}
+                <div className="flex flex-wrap items-center gap-4 mt-6 clear-both">
                   <LikeButton
                     likedBy={post.likedBy}
                     onLike={onLike}
                     onUnlike={onUnlike}
                   />
+
                   <button
                     onClick={() => setShowComments(!showComments)}
                     className="inline-flex items-center text-sm font-medium text-secondary hover:underline"
@@ -92,6 +95,16 @@ export default function PostModal({
                       {showComments ? 'Hide' : 'Show'} Comments
                     </span>
                   </button>
+
+                  {post.author.id === session?.user?.id && (
+                    <button
+                      onClick={() => router.push(`/post/${post.id}/edit`)}
+                      className="inline-flex items-center text-sm font-medium text-secondary hover:underline"
+                    >
+                      <EditIcon className="w-4 h-4 mr-1" />
+                      Edit
+                    </button>
+                  )}
                 </div>
 
                 {/* Animated Comments section */}

@@ -7,7 +7,7 @@ export function Footer() {
       <div className="inline-flex items-center gap-1 text-sm">
         <span>Made with 💎 by</span>
         <a
-          href="https://github.com/truman" // ✅ Replace with your GitHub profile
+          href="https://github.com/ttr404" // ✅ Replace with your GitHub profile
           target="_blank"
           rel="noreferrer"
           className="transition-colors text-secondary hover:text-primary font-medium underline"
@@ -16,7 +16,7 @@ export function Footer() {
         </a>
         <span>&</span>
         <a
-          href="https://github.com/stacy" // ✅ Replace with Stacy’s GitHub or homepage
+          href="https://github.com/stacy920" // ✅ Replace with Stacy’s GitHub or homepage
           target="_blank"
           rel="noreferrer"
           className="transition-colors text-secondary hover:text-primary font-medium underline"
@@ -26,7 +26,7 @@ export function Footer() {
       </div>
 
       <a
-        href="https://github.com/truman/ouststaam" // ✅ Replace with your repo link
+        href="https://github.com/ttr404/outstagram" // ✅ Replace with your repo link
         target="_blank"
         rel="noreferrer"
         className="inline-flex items-center gap-2 hover:text-primary"
