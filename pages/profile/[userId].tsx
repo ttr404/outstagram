@@ -26,13 +26,22 @@ import * as React from 'react'
 import { SubmitHandler, useForm } from 'react-hook-form'
 import toast from 'react-hot-toast'
 import { useMutation } from 'react-query'
+import PostModal from '@/components/postModal';
 
 const PostSummary = dynamic<PostSummaryProps>(
   () => import('@/components/post-summary').then((mod) => mod.PostSummary),
   { ssr: false }
 )
 
+
 const POSTS_PER_PAGE = 20
+
+function extractFirstImageUrl(contentHtml: string | null | undefined): string | null {
+  if (!contentHtml) return null
+  const match = contentHtml.match(/<img[^>]+src="([^">]+)"/)
+  return match?.[1] || null
+}
+
 
 function getProfileQueryPathAndInput(
   id: string
@@ -82,8 +91,8 @@ function ProfileInfo() {
           <title>{profileQuery.data.name} - Outstagram</title>
         </Head>
 
-        <div className="relative flex items-center gap-4 py-8 overflow-hidden">
-          <div className="flex items-center gap-8">
+        <div className="relative flex items-center gap-4 py-4 overflow-hidden mt-4">
+          <div className="flex items-center gap-6">
             {browserEnv.NEXT_PUBLIC_ENABLE_IMAGE_UPLOAD &&
             profileBelongsToUser ? (
               <button
@@ -96,18 +105,18 @@ function ProfileInfo() {
                 <Avatar
                   name={profileQuery.data.name!}
                   src={profileQuery.data.image}
-                  size="lg"
+                  size="md"
                 />
                 <div className="absolute inset-0 transition-opacity bg-gray-900 rounded-full opacity-0 group-hover:opacity-50" />
-                <div className="absolute inline-flex items-center justify-center transition-opacity -translate-x-1/2 -translate-y-1/2 bg-gray-900 border border-white rounded-full opacity-0 top-1/2 left-1/2 h-9 w-9 group-hover:opacity-100">
-                  <EditIcon className="w-4 h-4 text-white" />
+                <div className="absolute inline-flex items-center justify-center transition-opacity -translate-x-1/2 -translate-y-1/2 bg-gray-900 border border-white rounded-full opacity-0 top-1/2 left-1/2 h-7 w-7 group-hover:opacity-100">
+                  <EditIcon className="w-3 h-3 text-white" />
                 </div>
               </button>
             ) : (
               <Avatar
                 name={profileQuery.data.name!}
                 src={profileQuery.data.image}
-                size="lg"
+                size="md"
               />
             )}
 
@@ -116,7 +125,7 @@ function ProfileInfo() {
                 {profileQuery.data.name}
               </h1>
               {profileQuery.data.title && (
-                <p className="text-lg tracking-tight text-secondary">
+                <p className="text-base tracking-tight text-secondary">
                   {profileQuery.data.title}
                 </p>
               )}
@@ -124,7 +133,7 @@ function ProfileInfo() {
           </div>
 
           {profileBelongsToUser && (
-            <div className="ml-auto mr-10">
+            <div className="ml-auto mr-6">
               <IconButton
                 variant="secondary"
                 onClick={() => {
@@ -170,22 +179,24 @@ function ProfileInfo() {
   }
 
   return (
-    <div className="relative flex items-center gap-8 py-8 overflow-hidden animate-pulse">
-      <div className="w-32 h-32 bg-gray-200 rounded-full dark:bg-gray-700" />
+    <div className="relative flex items-center gap-6 py-4 overflow-hidden mt-4 animate-pulse">
+      <div className="w-20 h-20 bg-gray-200 rounded-full dark:bg-gray-700" />
       <div className="flex-1">
-        <div className="h-8 bg-gray-200 rounded w-60 dark:bg-gray-700" />
-        <div className="w-40 h-5 mt-2 bg-gray-200 rounded dark:bg-gray-700" />
+        <div className="h-6 bg-gray-200 rounded w-40 dark:bg-gray-700" />
+        <div className="w-32 h-4 mt-2 bg-gray-200 rounded dark:bg-gray-700" />
       </div>
       <DotPattern />
     </div>
   )
 }
 
+
 function ProfileFeed() {
   const { data: session } = useSession()
   const router = useRouter()
   const currentPageNumber = router.query.page ? Number(router.query.page) : 1
   const utils = trpc.useContext()
+
   const profileFeedQueryPathAndInput: InferQueryPathAndInput<'post.feed'> = [
     'post.feed',
     {
@@ -193,95 +204,52 @@ function ProfileFeed() {
       authorId: String(router.query.userId),
     },
   ]
+
   const profileFeedQuery = trpc.useQuery(profileFeedQueryPathAndInput)
   const likeMutation = trpc.useMutation(['post.like'], {
-    onMutate: async (likedPostId) => {
-      await utils.cancelQuery(profileFeedQueryPathAndInput)
-
-      const previousQuery = utils.getQueryData(profileFeedQueryPathAndInput)
-
-      if (previousQuery) {
-        utils.setQueryData(profileFeedQueryPathAndInput, {
-          ...previousQuery,
-          posts: previousQuery.posts.map((post) =>
-            post.id === likedPostId
-              ? {
-                  ...post,
-                  likedBy: [
-                    ...post.likedBy,
-                    {
-                      user: { id: session!.user.id, name: session!.user.name },
-                    },
-                  ],
-                }
-              : post
-          ),
-        })
-      }
-
-      return { previousQuery }
-    },
-    onError: (err, id, context: any) => {
-      if (context?.previousQuery) {
-        utils.setQueryData(profileFeedQueryPathAndInput, context.previousQuery)
-      }
-    },
+    onSuccess: () => utils.invalidateQueries(profileFeedQueryPathAndInput),
   })
   const unlikeMutation = trpc.useMutation(['post.unlike'], {
-    onMutate: async (unlikedPostId) => {
-      await utils.cancelQuery(profileFeedQueryPathAndInput)
-
-      const previousQuery = utils.getQueryData(profileFeedQueryPathAndInput)
-
-      if (previousQuery) {
-        utils.setQueryData(profileFeedQueryPathAndInput, {
-          ...previousQuery,
-          posts: previousQuery.posts.map((post) =>
-            post.id === unlikedPostId
-              ? {
-                  ...post,
-                  likedBy: post.likedBy.filter(
-                    (item) => item.user.id !== session!.user.id
-                  ),
-                }
-              : post
-          ),
-        })
-      }
-
-      return { previousQuery }
-    },
-    onError: (err, id, context: any) => {
-      if (context?.previousQuery) {
-        utils.setQueryData(profileFeedQueryPathAndInput, context.previousQuery)
-      }
-    },
+    onSuccess: () => utils.invalidateQueries(profileFeedQueryPathAndInput),
   })
+
+  const [selectedPost, setSelectedPost] = React.useState<any | null>(null)
 
   if (profileFeedQuery.data) {
     return (
       <>
-        <div className="flow-root mt-28">
+        <div className="flow-root mt-12">
           {profileFeedQuery.data.postCount === 0 ? (
             <div className="text-center text-secondary border rounded py-20 px-10">
               This user hasn&apos;t published any posts yet.
             </div>
           ) : (
-            <ul className="-my-12 divide-y divide-primary">
-              {profileFeedQuery.data.posts.map((post) => (
-                <li key={post.id} className="py-10">
-                  <PostSummary
-                    hideAuthor
-                    post={post}
-                    onLike={() => {
-                      likeMutation.mutate(post.id)
-                    }}
-                    onUnlike={() => {
-                      unlikeMutation.mutate(post.id)
+            <ul
+              className="-my-12 divide-y divide-primary"
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                gap: '1rem',
+              }}
+            >
+              {profileFeedQuery.data.posts.map((post) => {
+                const imageUrl = extractFirstImageUrl(post.contentHtml)
+                if (!imageUrl) return null
+
+                return (
+                  <li
+                    key={post.id}
+                    onClick={() => setSelectedPost(post)}
+                    className="rounded-md shadow-sm cursor-pointer overflow-hidden transform transition-transform hover:scale-105"
+                    style={{
+                      backgroundImage: `url(${imageUrl})`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
+                      aspectRatio: '1 / 1',
                     }}
                   />
-                </li>
-              ))}
+                )
+              })}
             </ul>
           )}
         </div>
@@ -291,6 +259,15 @@ function ProfileFeed() {
           itemsPerPage={POSTS_PER_PAGE}
           currentPageNumber={currentPageNumber}
         />
+
+        {selectedPost && (
+          <PostModal
+            post={selectedPost}
+            onClose={() => setSelectedPost(null)}
+            onLike={() => likeMutation.mutate(selectedPost.id)}
+            onUnlike={() => unlikeMutation.mutate(selectedPost.id)}
+          />
+        )}
       </>
     )
   }
@@ -300,7 +277,7 @@ function ProfileFeed() {
   }
 
   return (
-    <div className="flow-root mt-28">
+    <div className="flow-root mt-8">
       <ul className="-my-12 divide-y divide-primary">
         {[...Array(3)].map((_, idx) => (
           <li key={idx} className="py-10">
@@ -311,6 +288,7 @@ function ProfileFeed() {
     </div>
   )
 }
+
 
 function DotPattern() {
   return (
