@@ -12,7 +12,7 @@ export function Footer() {
           rel="noreferrer"
           className="transition-colors text-secondary hover:text-primary font-medium underline"
         >
-          Truman
+          Truman(Yao-Chu Huang)
         </a>
         <span>&</span>
         <a
